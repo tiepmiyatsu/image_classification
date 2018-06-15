@@ -9,8 +9,6 @@ import numpy as np
 import tensorflow as tf
 import sys
 import urllib.request
-import matplotlib.pyplot as plt
-from scipy.misc import imresize
 import json
 import cv2
 
@@ -67,11 +65,13 @@ def read_image_from_url(image_url, input_height=299,
                                 input_mean=0,
                                 input_std=255):
     with urllib.request.urlopen(image_url) as f:
-        pic = plt.imread(f, format='jpg')
-        # pic = imresize(pic, (input_width, input_height))
+        pic = np.asarray(bytearray(f.read()), dtype="uint8")
+        pic = cv2.imdecode(pic, cv2.IMREAD_COLOR)
         pic = cv2.resize(pic, (input_width, input_height))
         pic = pic - input_mean
         pic = pic / input_std
+    # cv2.imshow('test', pic)
+    # cv2.waitKey()
     return [pic]
 
 class image_classification():
@@ -146,8 +146,8 @@ class image_classification():
 
 if __name__ == '__main__':
     img_classification = image_classification()
-    file_name = '/home/mvn/Desktop/tensorflow/tensorflow-1.7.0/tensorflow/examples/label_image/data/grace_hopper.jpg'
-    img_classification.classify_image(file_name)
+    # file_name = '/home/mvn/Desktop/tensorflow/tensorflow-1.7.0/tensorflow/examples/label_image/data/grace_hopper.jpg'
+    # img_classification.classify_image(file_name)
     file_name = 'https://img.grouponcdn.com/deal/hfefAup1zQWBE2K8sWURgS27xax/hf-846x508/v1/c700x420.jpg'
     img_classification.classify_image(file_name)
     # read_tensor_from_image_file('/home/mvn/Desktop/tensorflow/tensorflow-1.7.0/tensorflow/examples/label_image/data/grace_hopper.jpg')
