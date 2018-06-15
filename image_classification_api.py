@@ -12,6 +12,7 @@ import urllib.request
 import matplotlib.pyplot as plt
 from scipy.misc import imresize
 import json
+import cv2
 
 def load_graph(model_file):
   graph = tf.Graph()
@@ -67,7 +68,8 @@ def read_image_from_url(image_url, input_height=299,
                                 input_std=255):
     with urllib.request.urlopen(image_url) as f:
         pic = plt.imread(f, format='jpg')
-        pic = imresize(pic, (input_width, input_height))
+        # pic = imresize(pic, (input_width, input_height))
+        pic = cv2.resize(pic, (input_width, input_height))
         pic = pic - input_mean
         pic = pic / input_std
     return [pic]
