@@ -58,7 +58,7 @@ def read_tensor_from_image_file(file_name,
   normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
   sess = tf.Session()
   result = sess.run(normalized)
-
+  # cv2.imshow(file_name, result[0])
   return result
 
 def read_image_from_url(image_url, input_height=299,
@@ -68,10 +68,11 @@ def read_image_from_url(image_url, input_height=299,
     with urllib.request.urlopen(image_url) as f:
         pic = np.asarray(bytearray(f.read()), dtype="uint8")
         pic = cv2.imdecode(pic, cv2.IMREAD_COLOR)
+        pic = cv2.cvtColor(pic, cv2.COLOR_RGB2BGR)
         pic = cv2.resize(pic, (input_width, input_height))
         pic = pic - input_mean
         pic = pic / input_std
-    # cv2.imshow('test', pic)
+    # cv2.imshow(file_name, pic)
     # cv2.waitKey()
     return [pic]
 
@@ -143,14 +144,14 @@ class image_classification():
         res = {}
         for i in top_k:
             print(labels[i], results[i])
-            res[labels[i]] = results[i]
+            res[labels[i]] = str(results[i])
         return res
 
 app = falcon.API()
 app.add_route("/{name}", image_classification())
 
 img_classification = image_classification()
-file_name = '/home/mvn/Desktop/tensorflow/tensorflow-1.7.0/tensorflow/examples/label_image/data/grace_hopper.jpg'
+file_name = '/home/mvn/Desktop/image_classification/data/Dog_CTA_Desktop_HeroImage.jpg'
 img_classification.classify_image(file_name)
-file_name = 'https://img.grouponcdn.com/deal/hfefAup1zQWBE2K8sWURgS27xax/hf-846x508/v1/c700x420.jpg'
+file_name = 'https://www.healthypawspetinsurance.com/Images/V3/DogAndPuppyInsurance/Dog_CTA_Desktop_HeroImage.jpg'
 img_classification.classify_image(file_name)
