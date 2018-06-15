@@ -1,0 +1,10 @@
+cup_cakes
+donuts
+gyoza
+hamburger
+ice_cream
+miso_soup
+ramen
+sashimi
+sushi
+takoyaki

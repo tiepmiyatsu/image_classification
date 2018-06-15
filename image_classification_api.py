@@ -4,14 +4,15 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
-
-import numpy as np
 import tensorflow as tf
 import sys
 import urllib.request
 import json
-import cv2
 import falcon
+from keras.models import Sequential, Model, load_model
+import numpy as np
+import cv2
+
 
 def load_graph(model_file):
   graph = tf.Graph()
@@ -58,7 +59,7 @@ def read_tensor_from_image_file(file_name,
   normalized = tf.divide(tf.subtract(resized, [input_mean]), [input_std])
   sess = tf.Session()
   result = sess.run(normalized)
-
+  # cv2.imshow(file_name, result[0])
   return result
 
 def read_image_from_url(image_url, input_height=299,
@@ -68,15 +69,30 @@ def read_image_from_url(image_url, input_height=299,
     with urllib.request.urlopen(image_url) as f:
         pic = np.asarray(bytearray(f.read()), dtype="uint8")
         pic = cv2.imdecode(pic, cv2.IMREAD_COLOR)
+        pic = cv2.cvtColor(pic, cv2.COLOR_RGB2BGR)
         pic = cv2.resize(pic, (input_width, input_height))
         pic = pic - input_mean
         pic = pic / input_std
-    # cv2.imshow('test', pic)
+    # cv2.imshow(file_name, pic)
     # cv2.waitKey()
     return [pic]
 
+
+def read_image_from_path(image_path, input_height=299,
+                                input_width=299,
+                                input_mean=0,
+                                input_std=255):
+    pic = cv2.imread(image_path)
+    pic = cv2.cvtColor(pic, cv2.COLOR_RGB2BGR)
+    pic = cv2.resize(pic, (input_width, input_height))
+    pic = pic - input_mean
+    pic = pic / input_std
+    return [pic]
+
+
 class image_classification():
     def __init__(self):
+        # imagenet
         model_file = "data/inception_v3_2016_08_28_frozen.pb"
         self.label_file = "data/imagenet_slim_labels.txt"
         self.input_height = 299
@@ -86,21 +102,38 @@ class image_classification():
         self.input_layer = "input"
         self.output_layer = "InceptionV3/Predictions/Reshape_1"
         self.graph = load_graph(model_file)
+        self.imagenet_labels = load_labels(self.label_file)
+
+        # food keras model
+        self.food101_model = load_model('data/model4.20-0.20.hdf5')
+        self.food101_label = []
+        with open('data/food101_10classes.txt') as f:
+            lines = f.readlines()
+            for line in lines:
+                self.food101_label.append(line.strip())
 
     def on_post(self, req, resp, name):
+        res = 'Do nothing'
         try:
             dt = req.stream.read()
             req = json.loads(dt.decode('utf-8'))
-
             if name == 'image_classification':
                 image_path = ''
                 top_k = 5
+                dataset = 'image_net'
                 if req.__contains__('image_path'):
                     image_path = req['image_path']
                 if req.__contains__('top_k'):
                     top_k = int(req['top_k'])
+                if req.__contains__('dataset'):
+                    dataset = int(req['dataset'])
                 if image_path != 0:
-                    res = self.classify_image(image_path, top_k)
+                    if dataset == 'image_net' or dataset == "imagenet":
+                        res = self.classify_image(image_path, top_k=top_k)
+                    elif dataset == 'food':
+                        res = self.keras_food_predict(image_path, top_k=top_k)
+                    else:
+                        res = 'Please define dataset in payload: [image or food]'
                 else:
                     res = 'Input image path or image url to classify'
         except:
@@ -139,18 +172,48 @@ class image_classification():
         results = np.squeeze(results)
 
         top_k = results.argsort()[-top_k:][::-1]
-        labels = load_labels(self.label_file)
         res = {}
         for i in top_k:
-            print(labels[i], results[i])
-            res[labels[i]] = results[i]
+            print(self.imagenet_labels[i], results[i])
+            res[self.imagenet_labels[i]] = str(results[i])
+        return res
+
+    def keras_food_predict(self, file_name, top_k=5):
+        print('Classify food at:', file_name)
+        try:
+            if file_name.find('http:') == 0 or file_name.find('https:') == 0:
+                t = read_image_from_url(
+                    file_name,
+                    input_height=self.input_height,
+                    input_width=self.input_width,
+                    input_mean=self.input_mean,
+                    input_std=self.input_std)
+            else:
+                t = read_image_from_path(
+                    file_name,
+                    input_height=self.input_height,
+                    input_width=self.input_width,
+                    input_mean=self.input_mean,
+                    input_std=self.input_std)
+        except:
+            return 'Cannot load image from: ' + file_name
+
+        y_pred = self.food101_model.predict(np.array(t))[0]
+        top_k = y_pred.argsort()[-top_k:][::-1]
+        res = {}
+        for i in top_k:
+            print(self.food101_label[i], y_pred[i])
+            res[self.food101_label[i]] = str(y_pred[i])
+
         return res
 
 app = falcon.API()
 app.add_route("/{name}", image_classification())
 
 img_classification = image_classification()
-file_name = '/home/mvn/Desktop/tensorflow/tensorflow-1.7.0/tensorflow/examples/label_image/data/grace_hopper.jpg'
-img_classification.classify_image(file_name)
-file_name = 'https://img.grouponcdn.com/deal/hfefAup1zQWBE2K8sWURgS27xax/hf-846x508/v1/c700x420.jpg'
-img_classification.classify_image(file_name)
+# file_name = '/home/mvn/Desktop/image_classification/data/Dog_CTA_Desktop_HeroImage.jpg'
+# img_classification.classify_image(file_name)
+# file_name = 'https://www.healthypawspetinsurance.com/Images/V3/DogAndPuppyInsurance/Dog_CTA_Desktop_HeroImage.jpg'
+# img_classification.classify_image(file_name)
+file_name = '/home/mvn/Desktop/image_classification/data/sushi1.jpg'
+img_classification.keras_food_predict(file_name)
