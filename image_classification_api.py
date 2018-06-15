@@ -11,6 +11,7 @@ import sys
 import urllib.request
 import json
 import cv2
+import falcon
 
 def load_graph(model_file):
   graph = tf.Graph()
@@ -144,11 +145,11 @@ class image_classification():
             res[labels[i]] = results[i]
         return res
 
-if __name__ == '__main__':
-    img_classification = image_classification()
-    # file_name = '/home/mvn/Desktop/tensorflow/tensorflow-1.7.0/tensorflow/examples/label_image/data/grace_hopper.jpg'
-    # img_classification.classify_image(file_name)
-    file_name = 'https://img.grouponcdn.com/deal/hfefAup1zQWBE2K8sWURgS27xax/hf-846x508/v1/c700x420.jpg'
-    img_classification.classify_image(file_name)
-    # read_tensor_from_image_file('/home/mvn/Desktop/tensorflow/tensorflow-1.7.0/tensorflow/examples/label_image/data/grace_hopper.jpg')
-    # read_image_from_url('https://img.grouponcdn.com/deal/hfefAup1zQWBE2K8sWURgS27xax/hf-846x508/v1/c700x420.jpg')
+app = falcon.API()
+app.add_route("/{name}", image_classification())
+
+img_classification = image_classification()
+file_name = '/home/mvn/Desktop/tensorflow/tensorflow-1.7.0/tensorflow/examples/label_image/data/grace_hopper.jpg'
+img_classification.classify_image(file_name)
+file_name = 'https://img.grouponcdn.com/deal/hfefAup1zQWBE2K8sWURgS27xax/hf-846x508/v1/c700x420.jpg'
+img_classification.classify_image(file_name)
