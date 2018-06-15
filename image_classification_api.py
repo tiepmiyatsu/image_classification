@@ -108,6 +108,7 @@ class image_classification():
         resp.body = json.dumps(res)
 
     def classify_image(self, file_name, top_k=5):
+        print('Classify image at:', file_name)
         try:
             if file_name.find('http:') == 0 or file_name.find('https:') == 0:
                 t = read_image_from_url(
