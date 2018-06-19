@@ -4,7 +4,7 @@ import falcon
 from keras.models import load_model
 import numpy as np
 import cv2
-
+import time
 
 def read_image_from_url(image_url, input_height=299,
                         input_width=299,
@@ -59,7 +59,10 @@ class image_classification():
                 if req.__contains__('top_k'):
                     top_k = int(req['top_k'])
                 if image_path != 0:
+                    start_t = time.time()
                     res = self.keras_food_predict(image_path, top_k=top_k)
+                    end_t = time.time()
+                    res['time'] = '{0:02f}'.format((end_t - start_t) * 1000)
                 else:
                     res = 'Input image path or image url to classify'
         except:
