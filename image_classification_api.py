@@ -232,7 +232,7 @@ class image_classification():
 
     def make_payload(res):
         text = str(res)
-        j = {"message": ["text": text]}
+        j = {"message": [{"res": text}]}
         return j
 
 app = falcon.API()
