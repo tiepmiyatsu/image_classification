@@ -148,7 +148,9 @@ class image_classification():
         resp.body = json.dumps(res)
 
     def classify_image(self, file_name, top_k=5):
+        res = {}
         print('Classify image at:', file_name)
+        start_t = time.time()
         try:
             if file_name.find('http:') == 0 or file_name.find('https:') == 0:
                 t = read_image_from_url(
@@ -165,7 +167,12 @@ class image_classification():
                     input_mean=self.input_mean,
                     input_std=self.input_std)
         except:
-            return 'Cannot load image from: ' + file_name
+            end_t = time.time()
+            res['read_image_time'] = '{0:0.2f} ms'.format((end_t - start_t) * 1000)
+            res['result'] = 'Cannot load image from: ' + file_name
+            return res
+        end_t = time.time()
+        res['read_image_time'] = '{0:0.2f} ms'.format((end_t - start_t) * 1000)
 
         input_name = "import/" + self.input_layer
         output_name = "import/" + self.output_layer
@@ -177,15 +184,17 @@ class image_classification():
                 input_operation.outputs[0]: t
             })
         results = np.squeeze(results)
-
         top_k = results.argsort()[-top_k:][::-1]
-        res = {}
+        result = {}
         for i in top_k:
             print(self.imagenet_labels[i], results[i])
-            res[self.imagenet_labels[i]] = str(results[i])
+            result[self.imagenet_labels[i]] = str(results[i])
+        res['result'] = result
         return res
 
     def keras_food_predict(self, file_name, top_k=5):
+        res = {}
+        start_t = time.time()
         print('Classify food at:', file_name)
         try:
             if file_name.find('http:') == 0 or file_name.find('https:') == 0:
@@ -203,15 +212,20 @@ class image_classification():
                     input_mean=self.input_mean,
                     input_std=self.input_std)
         except:
-            return 'Cannot load image from: ' + file_name
+            end_t = time.time()
+            res['read_image_time'] = '{0:0.2f} ms'.format((end_t - start_t) * 1000)
+            res['result'] = 'Cannot load image from: ' + file_name
+            return res
+        end_t = time.time()
+        res['read_image_time'] = '{0:0.2f} ms'.format((end_t - start_t) * 1000)
 
         y_pred = self.food101_model.predict(np.array(t))[0]
         top_k = y_pred.argsort()[-top_k:][::-1]
-        res = {}
+        result = {}
         for i in top_k:
             print(self.food101_label[i], y_pred[i])
-            res[self.food101_label[i]] = str(y_pred[i])
-
+            result[self.food101_label[i]] = str(y_pred[i])
+        res['result'] = result
         return res
 
 app = falcon.API()
