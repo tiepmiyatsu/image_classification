@@ -214,8 +214,8 @@ class image_classification():
 
         return res
 
-# app = falcon.API()
-# app.add_route("/{name}", image_classification())
+app = falcon.API()
+app.add_route("/{name}", image_classification())
 
 # img_classification = image_classification()
 # file_name = '/home/mvn/Desktop/image_classification/data/Dog_CTA_Desktop_HeroImage.jpg'
