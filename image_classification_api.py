@@ -145,6 +145,8 @@ class image_classification():
             res = {'res': err_ms}
         end_t = time.time()
         res['time'] = '{0:0.2f} ms'.format((end_t-start_t) * 1000)
+
+        res = self.make_payload(res)
         resp.body = json.dumps(res)
 
     def classify_image(self, file_name, top_k=5):
@@ -227,6 +229,11 @@ class image_classification():
             result[self.food101_label[i]] = str(y_pred[i])
         res['result'] = result
         return res
+
+    def make_payload(res):
+        text = str(res)
+        j = {"message": ["text": text]}
+        return j
 
 app = falcon.API()
 app.add_route("/{name}", image_classification())
