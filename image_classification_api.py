@@ -93,6 +93,7 @@ def read_image_from_path(image_path, input_height=299,
 class image_classification():
     def __init__(self):
         # imagenet
+        print('load image net model...')
         model_file = "data/inception_v3_2016_08_28_frozen.pb"
         self.label_file = "data/imagenet_slim_labels.txt"
         self.input_height = 299
@@ -105,6 +106,7 @@ class image_classification():
         self.imagenet_labels = load_labels(self.label_file)
 
         # food keras model
+        print('Load food keras model...')
         self.food101_model = load_model('data/model4.20-0.20.hdf5')
         self.food101_label = []
         with open('data/food101_10classes.txt') as f:
@@ -221,3 +223,4 @@ app.add_route("/{name}", image_classification())
 # img_classification.classify_image(file_name)
 # file_name = '/home/mvn/Desktop/image_classification/data/sushi1.jpg'
 # img_classification.keras_food_predict(file_name)
+print('ready!!!!')
