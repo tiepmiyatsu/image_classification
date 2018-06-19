@@ -129,7 +129,7 @@ class image_classification():
                 if req.__contains__('top_k'):
                     top_k = int(req['top_k'])
                 if req.__contains__('dataset'):
-                    dataset = int(req['dataset'])
+                    dataset = req['dataset']
                 if image_path != 0:
                     if dataset == 'image_net' or dataset == "imagenet":
                         pred = self.classify_image(image_path, top_k=top_k)
@@ -140,8 +140,9 @@ class image_classification():
                     res['res'] = pred
                 else:
                     res = {'res': 'Input image path or image url to classify'}
-        except:
-            res = {'res': 'There are something failed'}
+        except Exception as ex:
+            err_ms = "Unexpected error: " + str(ex)
+            res = {'res': err_ms}
         end_t = time.time()
         res['time'] = '{0:0.2f} ms'.format((end_t-start_t) * 1000)
         resp.body = json.dumps(res)
@@ -213,8 +214,8 @@ class image_classification():
 
         return res
 
-app = falcon.API()
-app.add_route("/{name}", image_classification())
+# app = falcon.API()
+# app.add_route("/{name}", image_classification())
 
 # img_classification = image_classification()
 # file_name = '/home/mvn/Desktop/image_classification/data/Dog_CTA_Desktop_HeroImage.jpg'
