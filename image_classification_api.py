@@ -230,7 +230,7 @@ class image_classification():
         res['result'] = result
         return res
 
-    def make_payload(res):
+    def make_payload(self, res):
         text = str(res)
         j = {"message": [{"res": text}]}
         return j
