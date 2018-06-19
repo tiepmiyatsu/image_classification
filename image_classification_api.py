@@ -11,7 +11,7 @@ import json
 import falcon
 import numpy as np
 import cv2
-
+import time
 
 def load_graph(model_file):
   graph = tf.Graph()
@@ -116,7 +116,10 @@ class image_classification():
                 if req.__contains__('top_k'):
                     top_k = int(req['top_k'])
                 if image_path != 0:
+                    start_t = time.time()
                     res = self.classify_image(image_path, top_k=top_k)
+                    end_t = time.time()
+                    res['time'] = '{0:02f}'.format((end_t-start_t) * 1000)
                 else:
                     res = 'Input image path or image url to classify'
         except:
